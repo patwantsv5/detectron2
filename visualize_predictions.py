@@ -2,7 +2,7 @@ import click
 import cv2
 import os
 
-from utils import get_labelme_dataset_function
+from utils import get_labelme_dataset_function, get_image_only_dataset_function
 
 from detectron2 import model_zoo
 from detectron2.data import DatasetCatalog, MetadataCatalog
@@ -18,10 +18,17 @@ def main(directory, weights):
     class_labels = ["ship"]
     dataset_name = "ship_dataset"
 
-    dataset_function = get_labelme_dataset_function(directory, class_labels)
+    # Old
+    # dataset_function = get_labelme_dataset_function(directory, class_labels)
+    # MetadataCatalog.get("ship_dataset").thing_classes = class_labels
+    # DatasetCatalog.register("ship_dataset", dataset_function)
+    # metadata = MetadataCatalog.get("ship_dataset")
+
+    # New
+    dataset_function = get_image_only_dataset_function(directory)
     MetadataCatalog.get("ship_dataset").thing_classes = class_labels
-    DatasetCatalog.register("ship_dataset", dataset_function)
-    metadata = MetadataCatalog.get("ship_dataset")
+    DatasetCatalog.register(dataset_name, dataset_function)
+    metadata = MetadataCatalog.get(dataset_name)
 
     cfg = get_cfg()
     cfg.merge_from_file(model_zoo.get_config_file(
@@ -34,7 +41,7 @@ def main(directory, weights):
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = len(class_labels)
 
     cfg.MODEL.WEIGHTS = weights
-    cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.99  # Preiction confidence threshold,
+    cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.10  # Preiction confidence threshold,
 
     predictor = DefaultPredictor(cfg)
 
