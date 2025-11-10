@@ -3,12 +3,27 @@ import cv2
 import json
 import numpy as np
 
-
+# FOR SHOWING LABELLED IMAGES!!!
 def get_labelme_dataset_function(labelme_directory, class_labels):
     def dataset_function():
         return labelme_directory_to_detectron_dataset(labelme_directory, class_labels)
     return dataset_function
 
+# FOR INFERENCE!!!
+def get_image_only_dataset_function(image_dir):
+    def dataset_function():
+        images = []
+        for filename in os.listdir(image_dir):
+            if filename.lower().endswith((".jpg", ".png", ".jpeg")):
+                full_path = os.path.join(image_dir, filename)
+                images.append({
+                    "file_name": full_path,
+                    "height": 0,
+                    "width": 0,
+                    "annotations": []
+                })
+        return images
+    return dataset_function
 
 def labelme_directory_to_detectron_dataset(directory, class_labels):
     files = os.listdir(directory)

@@ -5,7 +5,7 @@ import torch
 from utils import get_labelme_dataset_function
 
 from detectron2 import model_zoo
-from detectron2.data import DatasetCatalog, detection_utils as utils, transforms as T, build_detection_train_loader
+from detectron2.data import DatasetCatalog, detection_utils as utils, transforms as T, build_detection_train_loader, MetadataCatalog
 from detectron2.engine import launch, DefaultTrainer
 from detectron2.structures import BoxMode
 from detectron2.evaluation import RotatedCOCOEvaluator, DatasetEvaluators
@@ -78,6 +78,7 @@ def train_detectron(flags):
         flags["directory"], class_labels)
     dataset_name = "ship_dataset"
     DatasetCatalog.register(dataset_name, dataset_function)
+    MetadataCatalog.get(dataset_name).set(thing_classes=class_labels)
 
     cfg = get_cfg()
     cfg.merge_from_file(model_zoo.get_config_file(
@@ -90,9 +91,10 @@ def train_detectron(flags):
     cfg.DATASETS.TRAIN = (dataset_name,)
     cfg.DATASETS.TEST = (dataset_name,)
     # Directory where the checkpoints are saved, "." is the current working dir
-    cfg.OUTPUT_DIR = "."
+    cfg.OUTPUT_DIR = "ze_output/"
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = len(class_labels)
-
+    cfg.MODEL.DEVICE = "cuda"
+    cfg.SOLVER.IMS_PER_BATCH = 1
     trainer = RotatedBoundingBoxTrainer(cfg)
     # NOTE: important, the model will not train without this
     trainer.resume_or_load(resume=False)
@@ -103,6 +105,12 @@ def train_detectron(flags):
 @click.argument('directory', nargs=1)
 @click.option('--num-gpus', default=0, help='Number of GPUs to use, default none')
 def main(**flags):
+    if torch.cuda.is_available():
+        torch.cuda.set_device(0)
+        print("✅ Using GPU:", torch.cuda.get_device_name(0))
+    else:
+        print("❌ CUDA not available, using CPU.")
+
     launch(
         train_detectron,
         flags["num_gpus"],

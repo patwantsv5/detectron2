@@ -30,7 +30,7 @@ wheels/
 model_ts*.txt
 
 # ipython/jupyter notebooks
-*.ipynb
+# *.ipynb
 **/.ipynb_checkpoints/
 
 # Editor temporaries
@@ -53,3 +53,4 @@ _darcs
 /snippet
 /balloon/
 /mask_dataset/
+/hand_dataset/
